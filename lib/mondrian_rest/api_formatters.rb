@@ -13,6 +13,7 @@ module Mondrian::REST::Formatters
     add_parents = options[:add_parents]
     properties = options[:properties]
     rs = result.to_h(add_parents, options[:debug])
+    print rs
 
     return [] if rs[:values].empty?
 
@@ -56,13 +57,28 @@ module Mondrian::REST::Formatters
       y.yield columns + pnames + pluck(measures, :name)
 
       rs[:cell_keys].each_with_index do |row, i|
+        # This mapping fails for some member_key: 05000US51770 and one other
         cm = row.each_with_index.map { |member_key, i| indexed_members[i + 1][member_key] }
         msrs = rs[:values][i]
 
         if !add_parents
-          y.yield pluck(cm, :key).zip(pluck(cm, :caption)).flatten \
-                  + get_props(cm, pnames, props, dimensions) \
-                  + msrs
+#          begin
+#            print indexed_members
+#            print "{\n"
+#            row.each do |cell|
+#                print cell + "\n"
+#            end
+#            cm.each do |cell|
+#                print cell
+#                print "\n"
+#            end
+#            print "}\n"
+            y.yield pluck(cm, :key).zip(pluck(cm, :caption)).flatten \
+                    + get_props(cm, pnames, props, dimensions) \
+                    + msrs
+#          rescue NoMethodError
+#              print "    plucking failed for above\n"
+#          end
         else
           vdim = cm.each.with_index.reduce([]) do |cnames, (member, j)|
             member[:ancestors][0...slices[j] - (level_has_all[j] ? 1 : 0)].reverse.each do |ancestor|
